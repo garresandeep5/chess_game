@@ -10,6 +10,8 @@ class Chess {
             black: []
         };
         this.gameOver = false;
+        this.vsComputer = false;
+        this.computerColor = 'black';
     }
 
     createInitialBoard() {
@@ -369,5 +371,106 @@ class Chess {
             black: []
         };
         this.gameOver = false;
+    }
+
+    // Computer player methods
+    makeComputerMove() {
+        if (this.gameOver || this.currentPlayer !== this.computerColor) {
+            return false;
+        }
+
+        // Get all possible moves for the computer
+        const allMoves = [];
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const piece = this.board[row][col];
+                if (piece && piece.color === this.computerColor) {
+                    const moves = this.getValidMoves(row, col, piece);
+                    moves.forEach(move => {
+                        allMoves.push({
+                            fromRow: row,
+                            fromCol: col,
+                            toRow: move.row,
+                            toCol: move.col,
+                            piece: piece,
+                            capture: move.capture,
+                            score: this.evaluateMove(piece, move)
+                        });
+                    });
+                }
+            }
+        }
+
+        if (allMoves.length === 0) {
+            return false;
+        }
+
+        // Sort moves by score (highest first)
+        allMoves.sort((a, b) => b.score - a.score);
+
+        // Select one of the top moves (with some randomness)
+        const topMoves = allMoves.slice(0, Math.min(3, allMoves.length));
+        const selectedMove = topMoves[Math.floor(Math.random() * topMoves.length)];
+
+        // Make the move
+        this.selectPiece(selectedMove.fromRow, selectedMove.fromCol);
+        this.movePiece(selectedMove.toRow, selectedMove.toCol);
+
+        return true;
+    }
+
+    evaluateMove(piece, move) {
+        let score = 0;
+
+        // Prioritize captures based on piece value
+        if (move.capture) {
+            const capturedPiece = this.board[move.row][move.col];
+            score += this.getPieceValue(capturedPiece.type) * 10;
+        }
+
+        // Prioritize center control for knights and bishops
+        if (piece.type === 'knight' || piece.type === 'bishop') {
+            const centerDistance = Math.abs(move.row - 3.5) + Math.abs(move.col - 3.5);
+            score += (4 - centerDistance);
+        }
+
+        // Prioritize pawn advancement
+        if (piece.type === 'pawn') {
+            const advancement = piece.color === 'white' ? 6 - move.row : move.row - 1;
+            score += advancement;
+            
+            // Extra points for pawns that can be promoted
+            if ((piece.color === 'white' && move.row === 0) || 
+                (piece.color === 'black' && move.row === 7)) {
+                score += 20;
+            }
+        }
+
+        // Add some randomness
+        score += Math.random() * 0.5;
+
+        return score;
+    }
+
+    getPieceValue(pieceType) {
+        const values = {
+            'pawn': 1,
+            'knight': 3,
+            'bishop': 3,
+            'rook': 5,
+            'queen': 9,
+            'king': 100
+        };
+        return values[pieceType] || 0;
+    }
+
+    setGameMode(vsComputer, computerColor) {
+        this.vsComputer = vsComputer;
+        this.computerColor = computerColor;
+        
+        // If computer is white, make the first move
+        if (this.vsComputer && this.computerColor === 'white' && this.currentPlayer === 'white') {
+            this.makeComputerMove();
+        }
     }
 }

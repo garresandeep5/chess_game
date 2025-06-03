@@ -9,6 +9,22 @@
 <body>
     <div class="container">
         <h1>Chess Game</h1>
+        <div class="game-mode">
+            <label>
+                <input type="radio" name="game-mode" value="two-player" checked> Two Players
+            </label>
+            <label>
+                <input type="radio" name="game-mode" value="vs-computer"> Play vs Computer
+            </label>
+            <div class="computer-color" style="display: none;">
+                <label>
+                    <input type="radio" name="computer-color" value="black" checked> Computer plays Black
+                </label>
+                <label>
+                    <input type="radio" name="computer-color" value="white"> Computer plays White
+                </label>
+            </div>
+        </div>
         <div class="game-info">
             <div id="status">White's turn</div>
             <div id="captured-pieces">
